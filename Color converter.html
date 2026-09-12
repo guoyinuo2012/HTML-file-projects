@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Converter — Null’s Magic</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #111111;
+            --text-muted: #666666;
+            --accent: #198754; /* Green accent */
+            --accent-light: #e8f5e9;
+            --border: #e0e0e0;
+            --radius: 6px;
+            --font-main: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.01em;
+        }
+
+        .description {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Input Area */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        /* Preview Section */
+        .preview-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+        }
+
+        .swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.05);
+            background-color: #00FF88;
+            flex-shrink: 0;
+        }
+
+        .output-code {
+            flex-grow: 1;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* The Button */
+        .btn-outline-green {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-green:hover {
+            background-color: var(--accent-light);
+        }
+
+        .btn-outline-green:active {
+            transform: translateY(1px);
+        }
+
+        /* Mappings List */
+        .mapping-section {
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+
+        .mapping-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .mapping-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .mapping-label {
+            color: var(--text-muted);
+        }
+
+        .mapping-hex {
+            font-family: var(--font-mono);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .mapping-hex:hover {
+            background: #f0f0f0;
+            color: var(--accent);
+        }
+
+        /* Utility */
+        .mt-4 { margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Color converter</h1>
+        <div class="description">Simple utility for channel mapping</div>
+    </header>
+
+    <div class="input-group">
+        <label for="colorInput">Input Hex</label>
+        <input type="text" id="colorInput" value="#00FF88" spellcheck="false">
+    </div>
+
+    <div class="preview-card">
+        <div id="mainSwatch" class="swatch"></div>
+        <div class="output-code" id="mainHexText">#00FF88</div>
+        <button class="btn-outline-green" onclick="copyMain()">Copy</button>
+    </div>
+
+    <div class="mapping-section">
+        <label>Magic Mappings</label>
+        <div class="mapping-grid" id="mappingGrid">
+            <!-- Rows injected by JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById('colorInput');
+    const mainSwatch = document.getElementById('mainSwatch');
+    const mainHexText = document.getElementById('mainHexText');
+    const mappingGrid = document.getElementById('mappingGrid');
+
+    function hexToRgb(hex) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(s => s + s).join('');
+        const i = parseInt(hex, 16);
+        return {
+            r: (i >> 16) & 255,
+            g: (i >> 8) & 255,
+            b: i & 255
+        };
+    }
+
+    function rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    }
+
+    function update() {
+        let val = input.value.trim();
+        if (!/^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/.test(val)) return;
+        
+        const rgb = hexToRgb(val);
+        const currentHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+        
+        mainSwatch.style.backgroundColor = currentHex;
+        mainHexText.innerText = currentHex;
+
+        const maps = [
+            { name: "Red to Green", r: rgb.g, g: rgb.r, b: rgb.b },
+            { name: "Red to Blue",  r: rgb.b, g: rgb.g, b: rgb.r },
+            { name: "Green to Red", r: rgb.g, g: rgb.r, b: rgb.b },
+            { name: "Green to Blue",r: rgb.r, g: rgb.b, b: rgb.g },
+            { name: "Blue to Red",  r: rgb.b, g: rgb.g, b: rgb.r },
+            { name: "Blue to Green",r: rgb.r, g: rgb.b, b: rgb.g }
+        ];
+
+        mappingGrid.innerHTML = '';
+        maps.forEach(m => {
+            const hex = rgbToHex(m.r, m.g, m.b);
+            const row = document.createElement('div');
+            row.className = 'mapping-row';
+            row.innerHTML = `
+                <span class="mapping-label">${m.name}</span>
+                <span class="mapping-hex" onclick="applyHex('${hex}')">${hex}</span>
+            `;
+            mappingGrid.appendChild(row);
+        });
+    }
+
+    function applyHex(hex) {
+        input.value = hex;
+        update();
+    }
+
+    async function copyMain() {
+        await navigator.clipboard.writeText(mainHexText.innerText);
+        const btn = document.querySelector('.btn-outline-green');
+        const oldText = btn.innerText;
+        btn.innerText = "Saved";
+        setTimeout(() => btn.innerText = oldText, 1000);
+    }
+
+    input.addEventListener('input', update);
+    update();
+</script>
+
+</body>
+</html>
