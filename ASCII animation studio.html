@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Animation Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #1a1a1e;
+            color: #e0e0e0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            height: 40px;
+            background: #25252a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            background: #3a3a40;
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn:hover {
+            background: #4a4a50;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: #2a5a8a;
+            border-color: #3a6a9a;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #3a6a9a;
+        }
+
+        /* Main Layout */
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            width: 50px;
+            background: #25252a;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 5px;
+            gap: 5px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: #888;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .tool-btn:hover {
+            background: #3a3a40;
+            color: #ccc;
+        }
+
+        .tool-btn.active {
+            background: #3a5a8a;
+            border-color: #4a6a9a;
+            color: #fff;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0e;
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .ascii-canvas {
+            background: #000;
+            border: 1px solid #333;
+            display: grid;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            user-select: none;
+        }
+
+        .ascii-canvas.show-grid .cell {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cell {
+            width: 12px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: crosshair;
+            color: #0f0;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .cell.selected {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .cell.onion-skin {
+            opacity: 0.3;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 240px;
+            background: #25252a;
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #888;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #888;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 6px 8px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: #ccc;
+            font-size: 11px;
+            outline: none;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 6px 8px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: #ccc;
+            font-size: 11px;
+            outline: none;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 28px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 11px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        /* Character Picker */
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .char-btn {
+            width: 24px;
+            height: 24px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .char-btn:hover {
+            background: #444;
+        }
+
+        .char-btn.active {
+            background: #3a5a8a;
+            border-color: #4a6a9a;
+            color: #fff;
+        }
+
+        /* Timeline */
+        .timeline {
+            height: 120px;
+            background: #25252a;
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-controls {
+            height: 36px;
+            background: #2a2a30;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 8px;
+        }
+
+        .timeline-frames {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .frame-thumb {
+            min-width: 80px;
+            height: 60px;
+            background: #1a1a1e;
+            border: 2px solid #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            color: #0f0;
+            overflow: hidden;
+        }
+
+        .frame-thumb:hover {
+            border-color: #555;
+        }
+
+        .frame-thumb.active {
+            border-color: #3a5a8a;
+        }
+
+        .frame-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 9px;
+            color: #666;
+        }
+
+        .frame-add {
+            min-width: 40px;
+            height: 60px;
+            background: #333;
+            border: 2px dashed #555;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: #888;
+        }
+
+        .frame-add:hover {
+            background: #444;
+            color: #aaa;
+        }
+
+        /* Layer Panel */
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #333;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .layer-item:hover {
+            background: #3a3a40;
+        }
+
+        .layer-item.active {
+            background: #3a5a8a;
+        }
+
+        .layer-visibility {
+            width: 16px;
+            height: 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .layer-name {
+            flex: 1;
+            font-size: 11px;
+            color: #ccc;
+        }
+
+        /* Preview Mode */
+        .preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-overlay.active {
+            display: flex;
+        }
+
+        .preview-canvas {
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            color: #0f0;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .preview-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 35, 0.9);
+            padding: 10px 20px;
+            border-radius: 6px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #25252a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Template Gallery */
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .template-item {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .template-item:hover {
+            background: #3a3a40;
+            border-color: #555;
+        }
+
+        .template-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+
+        .template-preview {
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            color: #0f0;
+            white-space: pre;
+            line-height: 1.2;
+        }
+
+        /* CRT Effect */
+        .crt-effect {
+            position: relative;
+        }
+
+        .crt-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .properties-panel {
+                display: none;
+            }
+            
+            .toolbar {
+                width: 40px;
+            }
+            
+            .tool-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">ASCII Animation Studio</div>
+        <div class="header-controls">
+            <button class="btn" id="newProjectBtn">New</button>
+            <button class="btn" id="saveProjectBtn">Save</button>
+            <button class="btn" id="loadProjectBtn">Load</button>
+            <button class="btn" id="templatesBtn">Templates</button>
+            <button class="btn" id="previewBtn">Preview</button>
+            <button class="btn btn-primary" id="exportBtn">Export HTML</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="toolbar">
+            <button class="tool-btn active" data-tool="pencil" title="Pencil (B)">✎</button>
+            <button class="tool-btn" data-tool="eraser" title="Eraser (E)">⌫</button>
+            <button class="tool-btn" data-tool="fill" title="Fill (F)">⚡</button>
+            <button class="tool-btn" data-tool="line" title="Line (L)">╱</button>
+            <button class="tool-btn" data-tool="rectangle" title="Rectangle (R)">▢</button>
+            <button class="tool-btn" data-tool="circle" title="Circle">○</button>
+            <button class="tool-btn" data-tool="text" title="Text (T)">T</button>
+            <button class="tool-btn" data-tool="select" title="Select">⬚</button>
+            <button class="tool-btn" data-tool="particle" title="Particle">✦</button>
+            <button class="tool-btn" data-tool="smoke" title="Smoke">💨</button>
+            <button class="tool-btn" data-tool="fire" title="Fire">🔥</button>
+            <button class="tool-btn" data-tool="water" title="Water">≈</button>
+        </div>
+
+        <div class="canvas-area">
+            <div class="canvas-container">
+                <div class="ascii-canvas show-grid" id="asciiCanvas"></div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-controls">
+                    <button class="btn" id="firstFrameBtn">⏮</button>
+                    <button class="btn" id="prevFrameBtn">◀</button>
+                    <button class="btn" id="playBtn">▶</button>
+                    <button class="btn" id="nextFrameBtn">▶</button>
+                    <button class="btn" id="lastFrameBtn">⏭</button>
+                    <div style="width: 1px; height: 20px; background: #444; margin: 0 8px;"></div>
+                    <label style="font-size: 11px; color: #999;">FPS:</label>
+                    <input type="number" id="fpsInput" value="12" min="1" max="60" style="width: 50px;">
+                    <div style="width: 1px; height: 20px; background: #444; margin: 0 8px;"></div>
+                    <label style="font-size: 11px; color: #999;">Loop:</label>
+                    <select id="loopSelect" style="width: 80px;">
+                        <option value="loop">Loop</option>
+                        <option value="once">Once</option>
+                        <option value="pingpong">Ping-pong</option>
+                    </select>
+                    <div style="width: 1px; height: 20px; background: #444; margin: 0 8px;"></div>
+                    <button class="btn" id="addFrameBtn">+ Frame</button>
+                    <button class="btn" id="duplicateFrameBtn">Duplicate</button>
+                    <button class="btn" id="deleteFrameBtn">Delete</button>
+                </div>
+                <div class="timeline-frames" id="timelineFrames"></div>
+            </div>
+        </div>
+
+        <div class="properties-panel">
+            <div class="panel-section">
+                <div class="panel-title">Canvas</div>
+                <div class="control-group">
+                    <div class="control-label">Width</div>
+                    <select id="canvasWidth">
+                        <option value="40">40</option>
+                        <option value="60">60</option>
+                        <option value="80" selected>80</option>
+                        <option value="100">100</option>
+                        <option value="120">120</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Height</div>
+                    <select id="canvasHeight">
+                        <option value="20">20</option>
+                        <option value="30" selected>30</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showGrid" checked>
+                        <label for="showGrid">Show Grid</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Character</div>
+                <div class="control-group">
+                    <div class="control-label">Preset</div>
+                    <select id="charPreset">
+                        <option value="basic">Basic</option>
+                        <option value="blocks">Blocks</option>
+                        <option value="lines">Lines</option>
+                        <option value="ascii">ASCII</option>
+                        <option value="dots">Dots</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="char-grid" id="charGrid"></div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Custom Characters</div>
+                    <input type="text" id="customChars" placeholder="Enter characters">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Size <span class="control-value" id="charSizeValue">14</span></div>
+                    <input type="range" id="charSize" min="8" max="24" value="14">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Color</div>
+                <div class="control-group">
+                    <div class="control-label">Character Color</div>
+                    <input type="color" id="charColor" value="#00ff00">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Background</div>
+                    <input type="color" id="bgColor" value="#000000">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Brightness <span class="control-value" id="brightnessValue">100</span></div>
+                    <input type="range" id="brightness" min="50" max="150" value="100">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Brush</div>
+                <div class="control-group">
+                    <div class="control-label">Size <span class="control-value" id="brushSizeValue">1</span></div>
+                    <input type="range" id="brushSize" min="1" max="5" value="1">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Opacity <span class="control-value" id="opacityValue">100</span></div>
+                    <input type="range" id="opacity" min="10" max="100" value="100">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Onion Skin</div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="onionSkin">
+                        <label for="onionSkin">Enable</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Previous Opacity <span class="control-value" id="onionPrevValue">30</span></div>
+                    <input type="range" id="onionPrevOpacity" min="10" max="70" value="30">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Next Opacity <span class="control-value" id="onionNextValue">20</span></div>
+                    <input type="range" id="onionNextOpacity" min="10" max="70" value="20">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Effects</div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="crtEffect">
+                        <label for="crtEffect">CRT Effect</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="glowEffect">
+                        <label for="glowEffect">Glow</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Layers</div>
+                <div id="layerList"></div>
+                <button class="btn" id="addLayerBtn" style="margin-top: 8px;">+ Add Layer</button>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Export</div>
+                <button class="btn" id="exportTxtBtn">Export TXT</button>
+                <button class="btn" id="exportAllFramesBtn">Export All Frames</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Overlay -->
+    <div class="preview-overlay" id="previewOverlay">
+        <div class="preview-canvas" id="previewCanvas"></div>
+        <div class="preview-controls">
+            <button class="btn" id="previewFirstBtn">⏮</button>
+            <button class="btn" id="previewPrevBtn">◀</button>
+            <button class="btn" id="previewPlayBtn">▶</button>
+            <button class="btn" id="previewNextBtn">▶</button>
+            <button class="btn" id="previewLastBtn">⏭</button>
+            <div style="width: 1px; height: 20px; background: #444; margin: 0 8px;"></div>
+            <label style="font-size: 11px; color: #999;">FPS:</label>
+            <input type="number" id="previewFps" value="12" min="1" max="60" style="width: 50px;">
+            <div style="width: 1px; height: 20px; background: #444; margin: 0 8px;"></div>
+            <button class="btn" id="exitPreviewBtn">Exit</button>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal" id="templateModal">
+        <div class="modal-content">
+            <div class="modal-title">Templates</div>
+            <div class="modal-body">
+                <div class="template-grid" id="templateGrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeTemplateModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div class="modal" id="newProjectModal">
+        <div class="modal-content">
+            <div class="modal-title">New Project</div>
+            <div class="modal-body">
+                <div class="control-group">
+                    <div class="control-label">Width</div>
+                    <input type="number" id="newWidth" value="80" min="20" max="200">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Height</div>
+                    <input type="number" id="newHeight" value="30" min="10" max="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancelNewProject">Cancel</button>
+                <button class="btn btn-primary" id="confirmNewProject">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE MANAGEMENT ====================
+        const state = {
+            // Canvas
+            width: 80,
+            height: 30,
+            charSize: 14,
+            showGrid: true,
+            
+            // Current tool
+            currentTool: 'pencil',
+            currentChar: '#',
+            brushSize: 1,
+            opacity: 100,
+            
+            // Colors
+            charColor: '#00ff00',
+            bgColor: '#000000',
+            brightness: 100,
+            
+            // Frames
+            frames: [],
+            currentFrameIndex: 0,
+            fps: 12,
+            loopMode: 'loop',
+            
+            // Layers
+            layers: [],
+            currentLayerIndex: 0,
+            
+            // Onion skin
+            onionSkin: false,
+            onionPrevOpacity: 30,
+            onionNextOpacity: 20,
+            
+            // Effects
+            crtEffect: false,
+            glowEffect: false,
+            
+            // Playback
+            isPlaying: false,
+            playInterval: null,
+            
+            // Selection
+            selection: null,
+            clipboard: null,
+            
+            // History
+            history: [],
+            historyIndex: -1,
+            
+            // Drawing state
+            isDrawing: false,
+            startX: 0,
+            startY: 0,
+            
+            // Particles
+            particles: []
+        };
+
+        // Character presets
+        const charPresets = {
+            basic: '#@%&*+=-',
+            blocks: '█▓▒░',
+            lines: '─│┌┐└┘├┤┬┴┼',
+            ascii: '/\\|_~^<>',
+            dots: '.:;,\''
+        };
+
+        // Templates
+        const templates = {
+            train: {
+                name: 'ASCII Train',
+                width: 60,
+                height: 20,
+                frames: [
+                    [
+                        "                    .  .  .                 ",
+                        "                 .       .     .          ",
+                        "       ____     .  .           .          ",
+                        "  ____/|_||_\\.__                           ",
+                        " / _          _  \\                         ",
+                        "'-(o)--------(o)-'                         ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                "
+                    ],
+                    [
+                        "                   .  .  .                 ",
+                        "                .       .     .          ",
+                        "      ____     .  .           .          ",
+                        " ____/|_||_\\.__                           ",
+                        "/ _          _  \\                         ",
+                        "'-(o)--------(o)-'                         ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                ",
+                        "                                                "
+                    ]
+                ]
+            },
+            campfire: {
+                name: 'Campfire',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        "       .                                    ",
+                        "      *^*                                   ",
+                        "     ^***^                                  ",
+                        "    **^^***                                 ",
+                        "   ^******^                                ",
+                        "  **^^^^***^                               ",
+                        " ^**********^                              ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "        .                                   ",
+                        "       ^*^                                  ",
+                        "      *^^*                                  ",
+                        "     ^***^                                 ",
+                        "    **^^***                                ",
+                        "   ^******^                               ",
+                        "  **^^^^***^                              ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            waterfall: {
+                name: 'Waterfall',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        " ~~~   ~~~   ~~~                         ",
+                        "~~~~~ ~~~~~ ~~~~~                        ",
+                        "~~~~~~~ ~~~ ~~~~~~                       ",
+                        " ~~~~~ ~~~~~ ~~~~                        ",
+                        "~~~~~ ~~~~ ~~~~~                         ",
+                        "~~~~ ~~~~~ ~~~~                          ",
+                        "~~~ ~~~~~ ~~~                           ",
+                        "~~ ~~~~~ ~~                             ",
+                        "~ ~~~~~ ~                               ",
+                        " ~~~~~                                  ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "  ~~~   ~~~   ~~~                        ",
+                        " ~~~~~ ~~~~~ ~~~~~                       ",
+                        "~~~~~~~ ~~~ ~~~~~~                      ",
+                        "~~~~~~ ~~~~~ ~~~~~                       ",
+                        " ~~~~~ ~~~~ ~~~~~                        ",
+                        "~~~~~ ~~~~~ ~~~~                         ",
+                        "~~~~ ~~~~~ ~~~                          ",
+                        "~~~ ~~~~~ ~~~                           ",
+                        "~~ ~~~~~ ~~                             ",
+                        "~ ~~~~~ ~                               ",
+                        " ~~~~~                                  ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            rocket: {
+                name: 'Rocket',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        "                    /\\                   ",
+                        "                   /  \\                  ",
+                        "                  |    |                 ",
+                        "                  | @  |                 ",
+                        "                  |    |                 ",
+                        "                  |    |                 ",
+                        "                  |____|                 ",
+                        "                   |  |                  ",
+                        "                   |  |                  ",
+                        "                  /|  |\\                 ",
+                        "                 / |  | \\                ",
+                        "                /  |  |  \\               ",
+                        "               *   |  |   *              ",
+                        "              **  |  |  **               ",
+                        "             *** |  | ***               ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "                   /\\                    ",
+                        "                  /  \\                   ",
+                        "                 |    |                  ",
+                        "                 | @  |                  ",
+                        "                 |    |                  ",
+                        "                 |    |                  ",
+                        "                 |____|                  ",
+                        "                  |  |                   ",
+                        "                  |  |                   ",
+                        "                 /|  |\\                  ",
+                        "                / |  | \\                 ",
+                        "               /  |  |  \\                ",
+                        "              *   |  |   *               ",
+                        "             **  |  |  **                ",
+                        "            *** |  | ***                 ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            explosion: {
+                name: 'Explosion',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        "                   *                     ",
+                        "                  * *                    ",
+                        "                 *   *                   ",
+                        "                *  *  *                  ",
+                        "               * * * * *                 ",
+                        "              *   *   *                  ",
+                        "               *  *  *                   ",
+                        "                * * *                    ",
+                        "                 * *                     ",
+                        "                  *                      ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "                  ***                    ",
+                        "                 ** **                   ",
+                        "                **   **                  ",
+                        "               **  *  **                 ",
+                        "              ** *** **                 ",
+                        "               **   **                  ",
+                        "                **  **                   ",
+                        "                 ****                    ",
+                        "                  **                     ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            walking: {
+                name: 'Walking Character',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        "          O                               ",
+                        "         /|\\                              ",
+                        "         / \\                              ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "           O                               ",
+                        "          /|\\                              ",
+                        "          / \\                              ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            loading: {
+                name: 'Loading Animation',
+                width: 40,
+                height: 20,
+                frames: [
+                    [
+                        "        [=========]                     ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "        [==-------]                     ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "        [----==---]                     ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        "        [------==--]                     ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            },
+            space: {
+                name: 'Space Scene',
+                width: 60,
+                height: 20,
+                frames: [
+                    [
+                        "*       .       *       .       *       ",
+                        "                                        ",
+                        "    .           *           .           ",
+                        "                                        ",
+                        "*               .               *       ",
+                        "                                        ",
+                        "    *       .       *       .           ",
+                        "                                        ",
+                        ".               *               .       ",
+                        "                                        ",
+                        "    *       .       *       .           ",
+                        "                                        ",
+                        "*               .               *       ",
+                        "                                        ",
+                        "    .           *           .           ",
+                        "                                        ",
+                        "*       .       *       .       *       ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ],
+                    [
+                        " .       *       .       *       .      ",
+                        "                                        ",
+                        "    *           .           *           ",
+                        "                                        ",
+                        ".               *               .       ",
+                        "                                        ",
+                        "    .       *       .       *           ",
+                        "                                        ",
+                        "*               .               *       ",
+                        "                                        ",
+                        "    .       *       .       .           ",
+                        "                                        ",
+                        ".               *               .       ",
+                        "                                        ",
+                        "    *           .           *           ",
+                        "                                        ",
+                        " .       *       .       *       .      ",
+                        "                                        ",
+                        "                                        ",
+                        "                                        "
+                    ]
+                ]
+            }
+        };
+
+        // ==================== DOM ELEMENTS ====================
+        const asciiCanvas = document.getElementById('asciiCanvas');
+        const timelineFrames = document.getElementById('timelineFrames');
+        const layerList = document.getElementById('layerList');
+        const charGrid = document.getElementById('charGrid');
+        const previewOverlay = document.getElementById('previewOverlay');
+        const previewCanvas = document.getElementById('previewCanvas');
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadFromLocalStorage();
+            if (state.frames.length === 0) {
+                createNewProject(80, 30);
+            }
+            initCharGrid();
+            initLayerList();
+            renderCanvas();
+            renderTimeline();
+            setupEventListeners();
+            autosave();
+        }
+
+        function createNewProject(width, height) {
+            state.width = width;
+            state.height = height;
+            state.frames = [createEmptyFrame()];
+            state.currentFrameIndex = 0;
+            state.layers = [{ name: 'Layer 1', visible: true, data: null }];
+            state.currentLayerIndex = 0;
+            state.history = [];
+            state.historyIndex = -1;
+            state.particles = [];
+            saveToHistory();
+        }
+
+        function createEmptyFrame() {
+            const frame = [];
+            for (let y = 0; y < state.height; y++) {
+                const row = [];
+                for (let x = 0; x < state.width; x++) {
+                    row.push({ char: '', color: state.charColor });
+                }
+                frame.push(row);
+            }
+            return frame;
+        }
+
+        // ==================== CHARACTER GRID ====================
+        function initCharGrid() {
+            updateCharGrid();
+        }
+
+        function updateCharGrid() {
+            const preset = charPresets[state.currentCharPreset] || charPresets.basic;
+            charGrid.innerHTML = '';
+            
+            for (const char of preset) {
+                const btn = document.createElement('button');
+                btn.className = 'char-btn' + (state.currentChar === char ? ' active' : '');
+                btn.textContent = char;
+                btn.addEventListener('click', () => {
+                    state.currentChar = char;
+                    updateCharGrid();
+                });
+                charGrid.appendChild(btn);
+            }
+        }
+
+        // ==================== LAYER SYSTEM ====================
+        function initLayerList() {
+            renderLayerList();
+        }
+
+        function renderLayerList() {
+            layerList.innerHTML = '';
+            
+            state.layers.forEach((layer, index) => {
+                const item = document.createElement('div');
+                item.className = 'layer-item' + (index === state.currentLayerIndex ? ' active' : '');
+                item.innerHTML = `
+                    <button class="layer-visibility">${layer.visible ? '👁' : '👁‍🗨'}</button>
+                    <span class="layer-name">${layer.name}</span>
+                `;
+                
+                item.querySelector('.layer-visibility').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    layer.visible = !layer.visible;
+                    renderLayerList();
+                    renderCanvas();
+                });
+                
+                item.addEventListener('click', () => {
+                    state.currentLayerIndex = index;
+                    renderLayerList();
+                });
+                
+                layerList.appendChild(item);
+            });
+        }
+
+        // ==================== CANVAS RENDERING ====================
+        function renderCanvas() {
+            asciiCanvas.innerHTML = '';
+            asciiCanvas.style.gridTemplateColumns = `repeat(${state.width}, ${state.charSize}px)`;
+            asciiCanvas.style.gridTemplateRows = `repeat(${state.height}, ${state.charSize * 1.2}px)`;
+            
+            const currentFrame = state.frames[state.currentFrameIndex];
+            if (!currentFrame) return;
+            
+            // Render onion skin frames
+            if (state.onionSkin) {
+                if (state.currentFrameIndex > 0) {
+                    renderOnionFrame(state.frames[state.currentFrameIndex - 1], state.onionPrevOpacity / 100);
+                }
+                if (state.currentFrameIndex < state.frames.length - 1) {
+                    renderOnionFrame(state.frames[state.currentFrameIndex + 1], state.onionNextOpacity / 100);
+                }
+            }
+            
+            // Render current frame
+            for (let y = 0; y < state.height; y++) {
+                for (let x = 0; x < state.width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const cellData = currentFrame[y][x];
+                    if (cellData.char) {
+                        cell.textContent = cellData.char;
+                        cell.style.color = cellData.color || state.charColor;
+                    }
+                    
+                    asciiCanvas.appendChild(cell);
+                }
+            }
+            
+            // Apply effects
+            if (state.crtEffect) {
+                asciiCanvas.classList.add('crt-effect');
+            } else {
+                asciiCanvas.classList.remove('crt-effect');
+            }
+            
+            if (state.glowEffect) {
+                asciiCanvas.style.textShadow = `0 0 10px ${state.charColor}`;
+            } else {
+                asciiCanvas.style.textShadow = 'none';
+            }
+            
+            asciiCanvas.style.backgroundColor = state.bgColor;
+            asciiCanvas.style.filter = `brightness(${state.brightness}%)`;
+        }
+
+        function renderOnionFrame(frame, opacity) {
+            for (let y = 0; y < state.height; y++) {
+                for (let x = 0; x < state.width; x++) {
+                    const cellData = frame[y][x];
+                    if (cellData.char) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell onion-skin';
+                        cell.textContent = cellData.char;
+                        cell.style.opacity = opacity;
+                        cell.style.pointerEvents = 'none';
+                        asciiCanvas.appendChild(cell);
+                    }
+                }
+            }
+        }
+
+        // ==================== DRAWING TOOLS ====================
+        function handleDraw(x, y) {
+            const frame = state.frames[state.currentFrameIndex];
+            if (!frame || y < 0 || y >= state.height || x < 0 || x >= state.width) return;
+            
+            switch (state.currentTool) {
+                case 'pencil':
+                    drawPencil(x, y, frame);
+                    break;
+                case 'eraser':
+                    drawEraser(x, y, frame);
+                    break;
+                case 'fill':
+                    drawFill(x, y, frame);
+                    break;
+                case 'line':
+                    drawLine(x, y, frame);
+                    break;
+                case 'rectangle':
+                    drawRectangle(x, y, frame);
+                    break;
+                case 'circle':
+                    drawCircle(x, y, frame);
+                    break;
+                case 'text':
+                    drawText(x, y, frame);
+                    break;
+                case 'particle':
+                    spawnParticle(x, y);
+                    break;
+                case 'smoke':
+                    spawnSmoke(x, y);
+                    break;
+                case 'fire':
+                    spawnFire(x, y);
+                    break;
+                case 'water':
+                    spawnWater(x, y);
+                    break;
+            }
+            
+            renderCanvas();
+        }
+
+        function drawPencil(x, y, frame) {
+            const size = state.brushSize;
+            for (let dy = -size + 1; dy < size; dy++) {
+                for (let dx = -size + 1; dx < size; dx++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < state.width && ny >= 0 && ny < state.height) {
+                        frame[ny][nx] = { char: state.currentChar, color: state.charColor };
+                    }
+                }
+            }
+        }
+
+        function drawEraser(x, y, frame) {
+            const size = state.brushSize;
+            for (let dy = -size + 1; dy < size; dy++) {
+                for (let dx = -size + 1; dx < size; dx++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < state.width && ny >= 0 && ny < state.height) {
+                        frame[ny][nx] = { char: '', color: null };
+                    }
+                }
+            }
+        }
+
+        function drawFill(x, y, frame) {
+            const targetChar = frame[y][x].char;
+            const replacementChar = state.currentChar;
+            
+            if (targetChar === replacementChar) return;
+            
+            const stack = [[x, y]];
+            const visited = new Set();
+            
+            while (stack.length > 0) {
+                const [cx, cy] = stack.pop();
+                const key = `${cx},${cy}`;
+                
+                if (visited.has(key)) continue;
+                if (cx < 0 || cx >= state.width || cy < 0 || cy >= state.height) continue;
+                if (frame[cy][cx].char !== targetChar) continue;
+                
+                visited.add(key);
+                frame[cy][cx] = { char: replacementChar, color: state.charColor };
+                
+                stack.push([cx + 1, cy]);
+                stack.push([cx - 1, cy]);
+                stack.push([cx, cy + 1]);
+                stack.push([cx, cy - 1]);
+            }
+        }
+
+        function drawLine(x, y, frame) {
+            const dx = x - state.startX;
+            const dy = y - state.startY;
+            const steps = Math.max(Math.abs(dx), Math.abs(dy));
+            
+            for (let i = 0; i <= steps; i++) {
+                const t = steps === 0 ? 0 : i / steps;
+                const px = Math.round(state.startX + dx * t);
+                const py = Math.round(state.startY + dy * t);
+                
+                if (px >= 0 && px < state.width && py >= 0 && py < state.height) {
+                    frame[py][px] = { char: state.currentChar, color: state.charColor };
+                }
+            }
+        }
+
+        function drawRectangle(x, y, frame) {
+            const x1 = Math.min(state.startX, x);
+            const x2 = Math.max(state.startX, x);
+            const y1 = Math.min(state.startY, y);
+            const y2 = Math.max(state.startY, y);
+            
+            for (let px = x1; px <= x2; px++) {
+                if (px >= 0 && px < state.width) {
+                    if (y1 >= 0 && y1 < state.height) frame[y1][px] = { char: state.currentChar, color: state.charColor };
+                    if (y2 >= 0 && y2 < state.height) frame[y2][px] = { char: state.currentChar, color: state.charColor };
+                }
+            }
+            
+            for (let py = y1; py <= y2; py++) {
+                if (py >= 0 && py < state.height) {
+                    if (x1 >= 0 && x1 < state.width) frame[py][x1] = { char: state.currentChar, color: state.charColor };
+                    if (x2 >= 0 && x2 < state.width) frame[py][x2] = { char: state.currentChar, color: state.charColor };
+                }
+            }
+        }
+
+        function drawCircle(x, y, frame) {
+            const dx = x - state.startX;
+            const dy = y - state.startY;
+            const radius = Math.round(Math.sqrt(dx * dx + dy * dy));
+            
+            for (let angle = 0; angle < 360; angle += 10) {
+                const rad = angle * Math.PI / 180;
+                const px = Math.round(state.startX + radius * Math.cos(rad));
+                const py = Math.round(state.startY + radius * Math.sin(rad));
+                
+                if (px >= 0 && px < state.width && py >= 0 && py < state.height) {
+                    frame[py][px] = { char: state.currentChar, color: state.charColor };
+                }
+            }
+        }
+
+        function drawText(x, y, frame) {
+            const text = prompt('Enter text:');
+            if (text) {
+                for (let i = 0; i < text.length; i++) {
+                    const px = x + i;
+                    if (px >= 0 && px < state.width && y >= 0 && y < state.height) {
+                        frame[y][px] = { char: text[i], color: state.charColor };
+                    }
+                }
+            }
+        }
+
+        // ==================== PARTICLE SYSTEM ====================
+        function spawnParticle(x, y) {
+            state.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                life: 1,
+                char: state.currentChar,
+                color: state.charColor
+            });
+        }
+
+        function spawnSmoke(x, y) {
+            const smokeChars = ['·', '°', 'o', 'O', '@'];
+            for (let i = 0; i < 5; i++) {
+                state.particles.push({
+                    x: x + (Math.random() - 0.5) * 4,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: -Math.random() * 2 - 1,
+                    life: 1,
+                    char: smokeChars[Math.floor(Math.random() * smokeChars.length)],
+                    color: '#888888'
+                });
+            }
+        }
+
+        function spawnFire(x, y) {
+            const fireChars = ["'", '^', '*'];
+            for (let i = 0; i < 3; i++) {
+                state.particles.push({
+                    x: x + (Math.random() - 0.5) * 3,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: -Math.random() * 3 - 1,
+                    life: 1,
+                    char: fireChars[Math.floor(Math.random() * fireChars.length)],
+                    color: '#ff6600'
+                });
+            }
+        }
+
+        function spawnWater(x, y) {
+            const waterChars = ['~', '≈', '∼', '-', '_'];
+            for (let i = 0; i < 3; i++) {
+                state.particles.push({
+                    x: x,
+                    y: y + (Math.random() - 0.5) * 2,
+                    vx: Math.random() * 2 + 1,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    life: 1,
+                    char: waterChars[Math.floor(Math.random() * waterChars.length)],
+                    color: '#00aaff'
+                });
+            }
+        }
+
+        function updateParticles() {
+            const frame = state.frames[state.currentFrameIndex];
+            if (!frame) return;
+            
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                
+                if (p.life <= 0) {
+                    state.particles.splice(i, 1);
+                    continue;
+                }
+                
+                const px = Math.round(p.x);
+                const py = Math.round(p.y);
+                
+                if (px >= 0 && px < state.width && py >= 0 && py < state.height) {
+                    frame[py][px] = { char: p.char, color: p.color };
+                }
+            }
+        }
+
+        // ==================== TIMELINE ====================
+        function renderTimeline() {
+            timelineFrames.innerHTML = '';
+            
+            state.frames.forEach((frame, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'frame-thumb' + (index === state.currentFrameIndex ? ' active' : '');
+                thumb.innerHTML = `<span class="frame-number">${index + 1}</span>`;
+                thumb.textContent += frameToString(frame).substring(0, 200);
+                
+                thumb.addEventListener('click', () => {
+                    state.currentFrameIndex = index;
+                    renderTimeline();
+                    renderCanvas();
+                });
+                
+                timelineFrames.appendChild(thumb);
+            });
+            
+            const addBtn = document.createElement('div');
+            addBtn.className = 'frame-add';
+            addBtn.textContent = '+';
+            addBtn.addEventListener('click', addFrame);
+            timelineFrames.appendChild(addBtn);
+        }
+
+        function frameToString(frame) {
+            return frame.map(row => row.map(cell => cell.char).join('')).join('\n');
+        }
+
+        function addFrame() {
+            const newFrame = createEmptyFrame();
+            state.frames.splice(state.currentFrameIndex + 1, 0, newFrame);
+            state.currentFrameIndex++;
+            saveToHistory();
+            renderTimeline();
+            renderCanvas();
+        }
+
+        function duplicateFrame() {
+            const currentFrame = state.frames[state.currentFrameIndex];
+            const duplicated = JSON.parse(JSON.stringify(currentFrame));
+            state.frames.splice(state.currentFrameIndex + 1, 0, duplicated);
+            state.currentFrameIndex++;
+            saveToHistory();
+            renderTimeline();
+            renderCanvas();
+        }
+
+        function deleteFrame() {
+            if (state.frames.length <= 1) return;
+            state.frames.splice(state.currentFrameIndex, 1);
+            if (state.currentFrameIndex >= state.frames.length) {
+                state.currentFrameIndex = state.frames.length - 1;
+            }
+            saveToHistory();
+            renderTimeline();
+            renderCanvas();
+        }
+
+        // ==================== PLAYBACK ====================
+        function playAnimation() {
+            if (state.isPlaying) {
+                stopAnimation();
+                return;
+            }
+            
+            state.isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸';
+            
+            const interval = 1000 / state.fps;
+            state.playInterval = setInterval(() => {
+                nextFrame();
+            }, interval);
+        }
+
+        function stopAnimation() {
+            state.isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶';
+            if (state.playInterval) {
+                clearInterval(state.playInterval);
+                state.playInterval = null;
+            }
+        }
+
+        function nextFrame() {
+            if (state.loopMode === 'pingpong') {
+                if (state.currentFrameIndex >= state.frames.length - 1) {
+                    state.direction = -1;
+                } else if (state.currentFrameIndex <= 0) {
+                    state.direction = 1;
+                }
+                state.currentFrameIndex += state.direction || 1;
+            } else {
+                state.currentFrameIndex++;
+                if (state.currentFrameIndex >= state.frames.length) {
+                    if (state.loopMode === 'once') {
+                        stopAnimation();
+                        state.currentFrameIndex = 0;
+                        return;
+                    }
+                    state.currentFrameIndex = 0;
+                }
+            }
+            renderTimeline();
+            renderCanvas();
+        }
+
+        function prevFrame() {
+            state.currentFrameIndex--;
+            if (state.currentFrameIndex < 0) {
+                state.currentFrameIndex = state.frames.length - 1;
+            }
+            renderTimeline();
+            renderCanvas();
+        }
+
+        function firstFrame() {
+            state.currentFrameIndex = 0;
+            renderTimeline();
+            renderCanvas();
+        }
+
+        function lastFrame() {
+            state.currentFrameIndex = state.frames.length - 1;
+            renderTimeline();
+            renderCanvas();
+        }
+
+        // ==================== HISTORY ====================
+        function saveToHistory() {
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push(JSON.stringify({
+                frames: state.frames,
+                currentFrameIndex: state.currentFrameIndex
+            }));
+            state.historyIndex++;
+            
+            if (state.history.length > 50) {
+                state.history.shift();
+                state.historyIndex--;
+            }
+        }
+
+        function undo() {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                const restored = JSON.parse(state.history[state.historyIndex]);
+                state.frames = restored.frames;
+                state.currentFrameIndex = restored.currentFrameIndex;
+                renderTimeline();
+                renderCanvas();
+            }
+        }
+
+        function redo() {
+            if (state.historyIndex < state.history.length - 1) {
+                state.historyIndex++;
+                const restored = JSON.parse(state.history[state.historyIndex]);
+                state.frames = restored.frames;
+                state.currentFrameIndex = restored.currentFrameIndex;
+                renderTimeline();
+                renderCanvas();
+            }
+        }
+
+        // ==================== PROJECT SAVE/LOAD ====================
+        function saveProject() {
+            const projectData = {
+                width: state.width,
+                height: state.height,
+                frames: state.frames,
+                fps: state.fps,
+                loopMode: state.loopMode,
+                charColor: state.charColor,
+                bgColor: state.bgColor
+            };
+            
+            const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'project.ascii';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadProject(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    state.width = data.width;
+                    state.height = data.height;
+                    state.frames = data.frames;
+                    state.fps = data.fps || 12;
+                    state.loopMode = data.loopMode || 'loop';
+                    state.charColor = data.charColor || '#00ff00';
+                    state.bgColor = data.bgColor || '#000000';
+                    state.currentFrameIndex = 0;
+                    state.history = [];
+                    state.historyIndex = -1;
+                    saveToHistory();
+                    renderCanvas();
+                    renderTimeline();
+                    updateUI();
+                } catch (err) {
+                    alert('Failed to load project');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ==================== EXPORT ====================
+        function exportHTML() {
+            const framesData = state.frames.map(frame => frameToString(frame));
+            
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Animation</title>
+    <style>
+        body {
+            background: ${state.bgColor};
+            color: ${state.charColor};
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            white-space: pre;
+        }
+        #ascii {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="ascii"></div>
+    <script>
+        const frames = ${JSON.stringify(framesData)};
+        const fps = ${state.fps};
+        const loopMode = '${state.loopMode}';
+        let currentFrame = 0;
+        let direction = 1;
+        
+        function render() {
+            document.getElementById('ascii').textContent = frames[currentFrame];
+        }
+        
+        function nextFrame() {
+            if (loopMode === 'pingpong') {
+                if (currentFrame >= frames.length - 1) direction = -1;
+                else if (currentFrame <= 0) direction = 1;
+                currentFrame += direction;
+            } else {
+                currentFrame++;
+                if (currentFrame >= frames.length) {
+                    if (loopMode === 'once') return;
+                    currentFrame = 0;
+                }
+            }
+            render();
+        }
+        
+        render();
+        setInterval(nextFrame, 1000 / fps);
+    <\/script>
+</body>
+</html>`;
+            
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'animation.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportTXT() {
+            const frame = state.frames[state.currentFrameIndex];
+            const text = frameToString(frame);
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'frame.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportAllFrames() {
+            const allFrames = state.frames.map((frame, index) => 
+                `=== Frame ${index + 1} ===\n${frameToString(frame)}`
+            ).join('\n\n');
+            
+            const blob = new Blob([allFrames], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'all_frames.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== IMPORT ====================
+        function importTXT(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const height = lines.length;
+                const width = Math.max(...lines.map(line => line.length));
+                
+                state.width = width;
+                state.height = height;
+                state.frames = [createEmptyFrame()];
+                state.currentFrameIndex = 0;
+                
+                const frame = state.frames[0];
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (lines[y] && lines[y][x]) {
+                            frame[y][x] = { char: lines[y][x], color: state.charColor };
+                        }
+                    }
+                }
+                
+                saveToHistory();
+                renderCanvas();
+                renderTimeline();
+                updateUI();
+            };
+            reader.readAsText(file);
+        }
+
+        // ==================== LOCAL STORAGE ====================
+        function saveToLocalStorage() {
+            const data = {
+                width: state.width,
+                height: state.height,
+                frames: state.frames,
+                fps: state.fps,
+                loopMode: state.loopMode,
+                charColor: state.charColor,
+                bgColor: state.bgColor
+            };
+            localStorage.setItem('asciiStudioAutosave', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('asciiStudioAutosave');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    state.width = data.width;
+                    state.height = data.height;
+                    state.frames = data.frames;
+                    state.fps = data.fps || 12;
+                    state.loopMode = data.loopMode || 'loop';
+                    state.charColor = data.charColor || '#00ff00';
+                    state.bgColor = data.bgColor || '#000000';
+                    state.currentFrameIndex = 0;
+                } catch (e) {
+                    console.error('Failed to load autosave');
+                }
+            }
+        }
+
+        function autosave() {
+            setInterval(saveToLocalStorage, 30000);
+        }
+
+        // ==================== TEMPLATES ====================
+        function loadTemplate(templateName) {
+            const template = templates[templateName];
+            if (!template) return;
+            
+            state.width = template.width;
+            state.height = template.height;
+            state.frames = template.frames.map(frameStr => {
+                const lines = frameStr;
+                const frame = [];
+                for (let y = 0; y < state.height; y++) {
+                    const row = [];
+                    for (let x = 0; x < state.width; x++) {
+                        const char = (lines[y] && lines[y][x]) ? lines[y][x] : '';
+                        row.push({ char, color: state.charColor });
+                    }
+                    frame.push(row);
+                }
+                return frame;
+            });
+            state.currentFrameIndex = 0;
+            state.history = [];
+            state.historyIndex = -1;
+            saveToHistory();
+            renderCanvas();
+            renderTimeline();
+            updateUI();
+        }
+
+        function renderTemplates() {
+            const grid = document.getElementById('templateGrid');
+            grid.innerHTML = '';
+            
+            for (const [key, template] of Object.entries(templates)) {
+                const item = document.createElement('div');
+                item.className = 'template-item';
+                item.innerHTML = `
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-preview">${template.frames[0].join('\n').substring(0, 100)}</div>
+                `;
+                item.addEventListener('click', () => {
+                    loadTemplate(key);
+                    document.getElementById('templateModal').classList.remove('active');
+                });
+                grid.appendChild(item);
+            }
+        }
+
+        // ==================== PREVIEW MODE ====================
+        function openPreview() {
+            previewOverlay.classList.add('active');
+            renderPreview();
+        }
+
+        function closePreview() {
+            previewOverlay.classList.remove('active');
+            stopPreviewAnimation();
+        }
+
+        function renderPreview() {
+            const frame = state.frames[state.currentFrameIndex];
+            previewCanvas.textContent = frameToString(frame);
+            previewCanvas.style.color = state.charColor;
+            previewCanvas.style.backgroundColor = state.bgColor;
+        }
+
+        let previewInterval = null;
+        let previewFrameIndex = 0;
+
+        function playPreview() {
+            if (previewInterval) {
+                stopPreviewAnimation();
+                return;
+            }
+            
+            const fps = parseInt(document.getElementById('previewFps').value) || 12;
+            previewInterval = setInterval(() => {
+                previewFrameIndex++;
+                if (previewFrameIndex >= state.frames.length) {
+                    if (state.loopMode === 'once') {
+                        stopPreviewAnimation();
+                        return;
+                    }
+                    previewFrameIndex = 0;
+                }
+                state.currentFrameIndex = previewFrameIndex;
+                renderPreview();
+            }, 1000 / fps);
+        }
+
+        function stopPreviewAnimation() {
+            if (previewInterval) {
+                clearInterval(previewInterval);
+                previewInterval = null;
+            }
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateUI() {
+            document.getElementById('canvasWidth').value = state.width;
+            document.getElementById('canvasHeight').value = state.height;
+            document.getElementById('charSize').value = state.charSize;
+            document.getElementById('charSizeValue').textContent = state.charSize;
+            document.getElementById('charColor').value = state.charColor;
+            document.getElementById('bgColor').value = state.bgColor;
+            document.getElementById('brightness').value = state.brightness;
+            document.getElementById('brightnessValue').textContent = state.brightness;
+            document.getElementById('fpsInput').value = state.fps;
+            document.getElementById('loopSelect').value = state.loopMode;
+            document.getElementById('showGrid').checked = state.showGrid;
+            document.getElementById('onionSkin').checked = state.onionSkin;
+            document.getElementById('onionPrevOpacity').value = state.onionPrevOpacity;
+            document.getElementById('onionPrevValue').textContent = state.onionPrevOpacity;
+            document.getElementById('onionNextOpacity').value = state.onionNextOpacity;
+            document.getElementById('onionNextValue').textContent = state.onionNextOpacity;
+            document.getElementById('crtEffect').checked = state.crtEffect;
+            document.getElementById('glowEffect').checked = state.glowEffect;
+            document.getElementById('brushSize').value = state.brushSize;
+            document.getElementById('brushSizeValue').textContent = state.brushSize;
+            document.getElementById('opacity').value = state.opacity;
+            document.getElementById('opacityValue').textContent = state.opacity;
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.currentTool = btn.dataset.tool;
+                });
+            });
+            
+            // Canvas interaction
+            asciiCanvas.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('cell')) {
+                    state.isDrawing = true;
+                    state.startX = parseInt(e.target.dataset.x);
+                    state.startY = parseInt(e.target.dataset.y);
+                    handleDraw(state.startX, state.startY);
+                }
+            });
+            
+            asciiCanvas.addEventListener('mousemove', (e) => {
+                if (state.isDrawing && e.target.classList.contains('cell')) {
+                    const x = parseInt(e.target.dataset.x);
+                    const y = parseInt(e.target.dataset.y);
+                    handleDraw(x, y);
+                }
+            });
+            
+            asciiCanvas.addEventListener('mouseup', () => {
+                if (state.isDrawing) {
+                    state.isDrawing = false;
+                    saveToHistory();
+                }
+            });
+            
+            asciiCanvas.addEventListener('mouseleave', () => {
+                if (state.isDrawing) {
+                    state.isDrawing = false;
+                    saveToHistory();
+                }
+            });
+            
+            // Timeline controls
+            document.getElementById('firstFrameBtn').addEventListener('click', firstFrame);
+            document.getElementById('prevFrameBtn').addEventListener('click', prevFrame);
+            document.getElementById('playBtn').addEventListener('click', playAnimation);
+            document.getElementById('nextFrameBtn').addEventListener('click', nextFrame);
+            document.getElementById('lastFrameBtn').addEventListener('click', lastFrame);
+            document.getElementById('addFrameBtn').addEventListener('click', addFrame);
+            document.getElementById('duplicateFrameBtn').addEventListener('click', duplicateFrame);
+            document.getElementById('deleteFrameBtn').addEventListener('click', deleteFrame);
+            
+            // FPS and loop
+            document.getElementById('fpsInput').addEventListener('change', (e) => {
+                state.fps = parseInt(e.target.value) || 12;
+                if (state.isPlaying) {
+                    stopAnimation();
+                    playAnimation();
+                }
+            });
+            
+            document.getElementById('loopSelect').addEventListener('change', (e) => {
+                state.loopMode = e.target.value;
+            });
+            
+            // Canvas settings
+            document.getElementById('canvasWidth').addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    const width = prompt('Enter custom width:');
+                    if (width) {
+                        state.width = parseInt(width);
+                        renderCanvas();
+                    }
+                } else {
+                    state.width = parseInt(e.target.value);
+                    renderCanvas();
+                }
+            });
+            
+            document.getElementById('canvasHeight').addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    const height = prompt('Enter custom height:');
+                    if (height) {
+                        state.height = parseInt(height);
+                        renderCanvas();
+                    }
+                } else {
+                    state.height = parseInt(e.target.value);
+                    renderCanvas();
+                }
+            });
+            
+            document.getElementById('showGrid').addEventListener('change', (e) => {
+                state.showGrid = e.target.checked;
+                asciiCanvas.classList.toggle('show-grid', state.showGrid);
+            });
+            
+            // Character settings
+            document.getElementById('charPreset').addEventListener('change', (e) => {
+                state.currentCharPreset = e.target.value;
+                updateCharGrid();
+            });
+            
+            document.getElementById('customChars').addEventListener('input', (e) => {
+                if (e.target.value) {
+                    state.currentCharPreset = 'custom';
+                    charPresets.custom = e.target.value;
+                    updateCharGrid();
+                }
+            });
+            
+            document.getElementById('charSize').addEventListener('input', (e) => {
+                state.charSize = parseInt(e.target.value);
+                document.getElementById('charSizeValue').textContent = state.charSize;
+                renderCanvas();
+            });
+            
+            // Color settings
+            document.getElementById('charColor').addEventListener('input', (e) => {
+                state.charColor = e.target.value;
+                renderCanvas();
+            });
+            
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                state.bgColor = e.target.value;
+                renderCanvas();
+            });
+            
+            document.getElementById('brightness').addEventListener('input', (e) => {
+                state.brightness = parseInt(e.target.value);
+                document.getElementById('brightnessValue').textContent = state.brightness;
+                renderCanvas();
+            });
+            
+            // Brush settings
+            document.getElementById('brushSize').addEventListener('input', (e) => {
+                state.brushSize = parseInt(e.target.value);
+                document.getElementById('brushSizeValue').textContent = state.brushSize;
+            });
+            
+            document.getElementById('opacity').addEventListener('input', (e) => {
+                state.opacity = parseInt(e.target.value);
+                document.getElementById('opacityValue').textContent = state.opacity;
+            });
+            
+            // Onion skin
+            document.getElementById('onionSkin').addEventListener('change', (e) => {
+                state.onionSkin = e.target.checked;
+                renderCanvas();
+            });
+            
+            document.getElementById('onionPrevOpacity').addEventListener('input', (e) => {
+                state.onionPrevOpacity = parseInt(e.target.value);
+                document.getElementById('onionPrevValue').textContent = state.onionPrevOpacity;
+                if (state.onionSkin) renderCanvas();
+            });
+            
+            document.getElementById('onionNextOpacity').addEventListener('input', (e) => {
+                state.onionNextOpacity = parseInt(e.target.value);
+                document.getElementById('onionNextValue').textContent = state.onionNextOpacity;
+                if (state.onionSkin) renderCanvas();
+            });
+            
+            // Effects
+            document.getElementById('crtEffect').addEventListener('change', (e) => {
+                state.crtEffect = e.target.checked;
+                renderCanvas();
+            });
+            
+            document.getElementById('glowEffect').addEventListener('change', (e) => {
+                state.glowEffect = e.target.checked;
+                renderCanvas();
+            });
+            
+            // Layers
+            document.getElementById('addLayerBtn').addEventListener('click', () => {
+                state.layers.push({ name: `Layer ${state.layers.length + 1}`, visible: true, data: null });
+                renderLayerList();
+            });
+            
+            // Header buttons
+            document.getElementById('newProjectBtn').addEventListener('click', () => {
+                document.getElementById('newProjectModal').classList.add('active');
+            });
+            
+            document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
+            
+            document.getElementById('loadProjectBtn').addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.ascii';
+                input.onchange = (e) => loadProject(e.target.files[0]);
+                input.click();
+            });
+            
+            document.getElementById('templatesBtn').addEventListener('click', () => {
+                renderTemplates();
+                document.getElementById('templateModal').classList.add('active');
+            });
+            
+            document.getElementById('previewBtn').addEventListener('click', openPreview);
+            
+            document.getElementById('exportBtn').addEventListener('click', exportHTML);
+            
+            // Export buttons
+            document.getElementById('exportTxtBtn').addEventListener('click', exportTXT);
+            document.getElementById('exportAllFramesBtn').addEventListener('click', exportAllFrames);
+            
+            // Modal controls
+            document.getElementById('closeTemplateModal').addEventListener('click', () => {
+                document.getElementById('templateModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelNewProject').addEventListener('click', () => {
+                document.getElementById('newProjectModal').classList.remove('active');
+            });
+            
+            document.getElementById('confirmNewProject').addEventListener('click', () => {
+                const width = parseInt(document.getElementById('newWidth').value);
+                const height = parseInt(document.getElementById('newHeight').value);
+                createNewProject(width, height);
+                document.getElementById('newProjectModal').classList.remove('active');
+                renderCanvas();
+                renderTimeline();
+                updateUI();
+            });
+            
+            // Preview controls
+            document.getElementById('previewFirstBtn').addEventListener('click', () => {
+                previewFrameIndex = 0;
+                renderPreview();
+            });
+            
+            document.getElementById('previewPrevBtn').addEventListener('click', () => {
+                previewFrameIndex--;
+                if (previewFrameIndex < 0) previewFrameIndex = state.frames.length - 1;
+                renderPreview();
+            });
+            
+            document.getElementById('previewPlayBtn').addEventListener('click', playPreview);
+            
+            document.getElementById('previewNextBtn').addEventListener('click', () => {
+                previewFrameIndex++;
+                if (previewFrameIndex >= state.frames.length) previewFrameIndex = 0;
+                renderPreview();
+            });
+            
+            document.getElementById('previewLastBtn').addEventListener('click', () => {
+                previewFrameIndex = state.frames.length - 1;
+                renderPreview();
+            });
+            
+            document.getElementById('exitPreviewBtn').addEventListener('click', closePreview);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                switch (e.key.toLowerCase()) {
+                    case 'b':
+                        selectTool('pencil');
+                        break;
+                    case 'e':
+                        selectTool('eraser');
+                        break;
+                    case 'f':
+                        selectTool('fill');
+                        break;
+                    case 'l':
+                        selectTool('line');
+                        break;
+                    case 'r':
+                        selectTool('rectangle');
+                        break;
+                    case 't':
+                        selectTool('text');
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        playAnimation();
+                        break;
+                    case 'z':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            undo();
+                        }
+                        break;
+                    case 'y':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            redo();
+                        }
+                        break;
+                    case 's':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            saveProject();
+                        } else {
+                            document.getElementById('settingsPanel')?.classList.toggle('open');
+                        }
+                        break;
+                    case 'o':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = '.ascii,.txt';
+                            input.onchange = (e) => {
+                                const file = e.target.files[0];
+                                if (file.name.endsWith('.ascii')) {
+                                    loadProject(file);
+                                } else {
+                                    importTXT(file);
+                                }
+                            };
+                            input.click();
+                        }
+                        break;
+                    case 'delete':
+                        if (state.selection) {
+                            // Delete selection
+                        }
+                        break;
+                }
+            });
+            
+            // File import for TXT
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    if (file.name.endsWith('.ascii')) {
+                        loadProject(file);
+                    } else if (file.name.endsWith('.txt')) {
+                        importTXT(file);
+                    }
+                }
+            });
+        }
+
+        function selectTool(tool) {
+            state.currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tool === tool);
+            });
+        }
+
+        // ==================== START ====================
+        init();
+    </script>
+</body>
+</html>
