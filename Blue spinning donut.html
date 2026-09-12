@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Large Blue Spinning Donut</title>
+    <style>
+        body {
+            background-color: #000;
+            /* Electric Blue Color */
+            color: #00d4ff; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: monospace;
+        }
+        #donut {
+            font-size: 6pt;
+            line-height: 5pt;
+            white-space: pre;
+            /* Blue Neon Glow */
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.8), 0 0 2px rgba(0, 212, 255, 1);
+        }
+    </style>
+</head>
+<body>
+
+    <pre id="donut"></pre>
+
+    <script>
+        (function() {
+            const pretag = document.getElementById('donut');
+            
+            // High resolution dimensions
+            const width = 160; 
+            const height = 80;
+
+            let A = 1, B = 1;
+
+            const asciiframe = function() {
+                let b = []; 
+                let z = []; 
+                
+                // Rotation speeds
+                A += 0.05;
+                B += 0.02;
+
+                const cA = Math.cos(A), sA = Math.sin(A);
+                const cB = Math.cos(B), sB = Math.sin(B);
+
+                // Clear buffers
+                for (let k = 0; k < width * height; k++) {
+                    b[k] = k % width === width - 1 ? "\n" : " ";
+                    z[k] = 0;
+                }
+
+                // Smooth surface calculation
+                for (let j = 0; j < 6.28; j += 0.04) { // theta
+                    const ct = Math.cos(j), st = Math.sin(j);
+                    for (let i = 0; i < 6.28; i += 0.01) { // phi
+                        const sp = Math.sin(i), cp = Math.cos(i);
+                        
+                        const h = ct + 2; 
+                        const D = 1 / (sp * h * sA + st * cA + 5); 
+                        const t = sp * h * cA - st * sA;
+
+                        // Projection scaling
+                        const x = Math.floor(width / 2 + 60 * D * (cp * h * cB - t * sB));
+                        const y = Math.floor(height / 2 + 30 * D * (cp * h * sB + t * cB));
+                        
+                        const o = x + width * y;
+                        
+                        // Shading/Luminance calculation
+                        const N = Math.floor(8 * ((st * sA - sp * ct * cA) * cB - sp * ct * sA - st * cA - cp * ct * sB));
+
+                        if (y < height && y >= 0 && x >= 0 && x < width && D > z[o]) {
+                            z[o] = D;
+                            // Luminance map
+                            b[o] = ".,-~:;=!*#$@"[N > 0 ? N : 0];
+                        }
+                    }
+                }
+                pretag.innerHTML = b.join("");
+            };
+
+            // Run at ~30 FPS
+            setInterval(asciiframe, 30);
+        })();
+    </script>
+</body>
+</html>
