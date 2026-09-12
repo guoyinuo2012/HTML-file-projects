@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Rain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .settings-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(20, 20, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: rgba(40, 40, 60, 0.9);
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            max-height: calc(100vh - 40px);
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-panel.open {
+            display: block;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .panel-content {
+            padding: 15px 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-group .btn {
+            margin-bottom: 0;
+        }
+
+        .fps-counter {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 15, 20, 0.8);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+            z-index: 1000;
+            display: none;
+        }
+
+        .fps-counter.visible {
+            display: block;
+        }
+
+        .paused-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 20, 0.9);
+            padding: 20px 40px;
+            border-radius: 6px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            z-index: 1002;
+            display: none;
+        }
+
+        .paused-indicator.visible {
+            display: block;
+        }
+
+        .shortcuts-info {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shortcuts-info kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .settings-panel {
+                width: calc(100vw - 40px);
+                max-height: calc(100vh - 40px);
+            }
+
+            .settings-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+        }
+
+        .clean-mode .ui-container,
+        .clean-mode .fps-counter {
+            display: none !important;
+        }
+
+        .clean-mode {
+            cursor: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="ui-container">
+        <button class="settings-btn" id="settingsBtn">⚙</button>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="panel-header">
+            <h2>Settings</h2>
+            <button class="close-btn" id="closeBtn">×</button>
+        </div>
+        <div class="panel-content">
+            <div class="section">
+                <div class="section-title">Animation</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Speed</span>
+                        <span class="control-value" id="speedValue">50</span>
+                    </div>
+                    <input type="range" id="speed" min="1" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Density</span>
+                        <span class="control-value" id="densityValue">50</span>
+                    </div>
+                    <input type="range" id="density" min="10" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Character Size</span>
+                        <span class="control-value" id="sizeValue">16</span>
+                    </div>
+                    <input type="range" id="size" min="8" max="32" value="16">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Trail Length</span>
+                        <span class="control-value" id="trailValue">50</span>
+                    </div>
+                    <input type="range" id="trail" min="10" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Direction</span>
+                    </div>
+                    <select id="direction">
+                        <option value="down">Down</option>
+                        <option value="up">Up</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Characters</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Preset</span>
+                    </div>
+                    <select id="charPreset">
+                        <option value="matrix">Matrix</option>
+                        <option value="binary">Binary</option>
+                        <option value="numbers">Numbers</option>
+                        <option value="hex">Hexadecimal</option>
+                        <option value="symbols">Symbols</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Custom Characters</span>
+                    </div>
+                    <input type="text" id="customChars" placeholder="Enter custom characters">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Randomness</span>
+                        <span class="control-value" id="randomnessValue">50</span>
+                    </div>
+                    <input type="range" id="randomness" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Colors</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Preset</span>
+                    </div>
+                    <select id="colorPreset">
+                        <option value="classic">Classic Green</option>
+                        <option value="cyan">Cyan</option>
+                        <option value="blue">Blue</option>
+                        <option value="purple">Purple</option>
+                        <option value="red">Red</option>
+                        <option value="amber">Amber</option>
+                        <option value="white">White</option>
+                        <option value="rainbow">Rainbow</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Primary Color</span>
+                    </div>
+                    <input type="color" id="primaryColor" value="#00ff00">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Head Color</span>
+                    </div>
+                    <input type="color" id="headColor" value="#ffffff">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Background Color</span>
+                    </div>
+                    <input type="color" id="bgColor" value="#000000">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Brightness</span>
+                        <span class="control-value" id="brightnessValue">100</span>
+                    </div>
+                    <input type="range" id="brightness" min="20" max="150" value="100">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Trail Opacity</span>
+                        <span class="control-value" id="trailOpacityValue">80</span>
+                    </div>
+                    <input type="range" id="trailOpacity" min="10" max="100" value="80">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Effects</div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="glow" checked>
+                        <label for="glow">Glow</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Glow Intensity</span>
+                        <span class="control-value" id="glowIntensityValue">50</span>
+                    </div>
+                    <input type="range" id="glowIntensity" min="0" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="brightHeads" checked>
+                        <label for="brightHeads">Bright Heads</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="flicker">
+                        <label for="flicker">Flicker</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="depth">
+                        <label for="depth">Depth</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="randomStreams" checked>
+                        <label for="randomStreams">Random Streams</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mouseInteraction" checked>
+                        <label for="mouseInteraction">Mouse Interaction</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="clickEffects" checked>
+                        <label for="clickEffects">Click Effects</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Presets</div>
+                <div class="control-group">
+                    <select id="presetSelect">
+                        <option value="">-- Select Preset --</option>
+                        <option value="classic">Classic Matrix</option>
+                        <option value="digital">Digital Blue</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="terminal">Terminal</option>
+                        <option value="binary">Binary</option>
+                        <option value="white">White Code</option>
+                        <option value="rainbow">Rainbow</option>
+                    </select>
+                </div>
+                <button class="btn" id="randomizeBtn">Randomize</button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Performance</div>
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Quality</span>
+                    </div>
+                    <select id="quality">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="ultra">Ultra</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showFps">
+                        <label for="showFps">Show FPS</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">View</div>
+                <div class="btn-group">
+                    <button class="btn" id="fullscreenBtn">Fullscreen</button>
+                    <button class="btn" id="cleanModeBtn">Clean Mode</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Actions</div>
+                <button class="btn" id="pauseBtn">Pause</button>
+                <button class="btn" id="resetBtn">Reset Settings</button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Keyboard Shortcuts</div>
+                <div class="shortcuts-info">
+                    <kbd>Space</kbd> Pause/Resume<br>
+                    <kbd>F</kbd> Fullscreen<br>
+                    <kbd>H</kbd> Hide/Show UI<br>
+                    <kbd>R</kbd> Randomize<br>
+                    <kbd>S</kbd> Settings<br>
+                    <kbd>C</kbd> Clean Mode<br>
+                    <kbd>1-4</kbd> Quick Presets
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fps-counter" id="fpsCounter">FPS: 60</div>
+    <div class="paused-indicator" id="pausedIndicator">PAUSED</div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const config = {
+            // Animation
+            speed: 50,
+            density: 50,
+            charSize: 16,
+            trailLength: 50,
+            direction: 'down',
+            
+            // Characters
+            charPreset: 'matrix',
+            customChars: '',
+            randomness: 50,
+            
+            // Colors
+            colorPreset: 'classic',
+            primaryColor: '#00ff00',
+            headColor: '#ffffff',
+            bgColor: '#000000',
+            brightness: 100,
+            trailOpacity: 80,
+            
+            // Effects
+            glow: true,
+            glowIntensity: 50,
+            brightHeads: true,
+            flicker: false,
+            depth: false,
+            randomStreams: true,
+            mouseInteraction: true,
+            clickEffects: true,
+            
+            // Performance
+            quality: 'high',
+            showFps: false,
+            
+            // State
+            paused: false,
+            cleanMode: false
+        };
+
+        // Character presets
+        const charPresets = {
+            matrix: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロワヲンン・ー、。「」',
+            binary: '01',
+            numbers: '0123456789',
+            hex: '0123456789ABCDEF',
+            symbols: '!@#$%^&*()+=-/\\|<>?'
+        };
+
+        // Color presets
+        const colorPresets = {
+            classic: { primary: '#00ff00', head: '#ffffff', bg: '#000000' },
+            cyan: { primary: '#00ffff', head: '#ffffff', bg: '#000a10' },
+            blue: { primary: '#4488ff', head: '#aaccff', bg: '#000520' },
+            purple: { primary: '#aa44ff', head: '#ffaaff', bg: '#100020' },
+            red: { primary: '#ff4444', head: '#ffaaaa', bg: '#200000' },
+            amber: { primary: '#ffaa00', head: '#ffddaa', bg: '#1a1000' },
+            white: { primary: '#ffffff', head: '#ffffff', bg: '#000000' },
+            rainbow: { primary: 'rainbow', head: '#ffffff', bg: '#000000' }
+        };
+
+        // Full presets
+        const fullPresets = {
+            classic: {
+                speed: 50, density: 50, charSize: 16, trailLength: 70,
+                charPreset: 'matrix', colorPreset: 'classic',
+                glow: true, glowIntensity: 60, brightHeads: true,
+                flicker: false, depth: false, randomStreams: true
+            },
+            digital: {
+                speed: 70, density: 50, charSize: 14, trailLength: 50,
+                charPreset: 'matrix', colorPreset: 'cyan',
+                glow: true, glowIntensity: 40, brightHeads: true,
+                flicker: false, depth: false, randomStreams: true
+            },
+            cyberpunk: {
+                speed: 80, density: 60, charSize: 14, trailLength: 60,
+                charPreset: 'matrix', colorPreset: 'purple',
+                glow: true, glowIntensity: 80, brightHeads: true,
+                flicker: true, depth: true, randomStreams: true
+            },
+            terminal: {
+                speed: 30, density: 40, charSize: 18, trailLength: 40,
+                charPreset: 'matrix', colorPreset: 'amber',
+                glow: true, glowIntensity: 20, brightHeads: true,
+                flicker: false, depth: false, randomStreams: false
+            },
+            binary: {
+                speed: 70, density: 60, charSize: 14, trailLength: 50,
+                charPreset: 'binary', colorPreset: 'classic',
+                glow: true, glowIntensity: 50, brightHeads: true,
+                flicker: false, depth: false, randomStreams: true
+            },
+            white: {
+                speed: 50, density: 50, charSize: 16, trailLength: 50,
+                charPreset: 'matrix', colorPreset: 'white',
+                glow: true, glowIntensity: 30, brightHeads: true,
+                flicker: false, depth: false, randomStreams: true
+            },
+            rainbow: {
+                speed: 60, density: 50, charSize: 16, trailLength: 60,
+                charPreset: 'matrix', colorPreset: 'rainbow',
+                glow: true, glowIntensity: 50, brightHeads: true,
+                flicker: false, depth: false, randomStreams: true
+            }
+        };
+
+        // ==================== CANVAS SETUP ====================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let dpr = window.devicePixelRatio || 1;
+        let width, height;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(dpr, dpr);
+            initStreams();
+        }
+
+        // ==================== RAIN STREAM SYSTEM ====================
+        let streams = [];
+        let particles = [];
+        let mouseX = -1000;
+        let mouseY = -1000;
+
+        class Stream {
+            constructor(x) {
+                this.x = x;
+                this.reset();
+            }
+
+            reset() {
+                this.y = config.direction === 'down' ? -Math.random() * height : height + Math.random() * height;
+                this.speed = (config.speed / 50) * (2 + Math.random() * 3);
+                this.length = Math.floor((config.trailLength / 50) * (10 + Math.random() * 20));
+                this.chars = [];
+                this.phase = Math.random() * Math.PI * 2;
+                this.active = Math.random() < 0.8;
+                this.depth = config.depth ? (Math.random() < 0.3 ? 0.5 : 1) : 1;
+                this.size = config.charSize * this.depth;
+                
+                for (let i = 0; i < this.length; i++) {
+                    this.chars.push(this.getRandomChar());
+                }
+            }
+
+            getRandomChar() {
+                let charset;
+                if (config.charPreset === 'custom' && config.customChars) {
+                    charset = config.customChars;
+                } else {
+                    charset = charPresets[config.charPreset] || charPresets.matrix;
+                }
+                return charset[Math.floor(Math.random() * charset.length)];
+            }
+
+            update() {
+                if (!this.active) {
+                    if (config.randomStreams && Math.random() < 0.005) {
+                        this.active = true;
+                        this.reset();
+                    }
+                    return;
+                }
+
+                const dir = config.direction === 'down' ? 1 : -1;
+                this.y += this.speed * dir * this.depth;
+
+                // Mouse interaction
+                if (config.mouseInteraction) {
+                    const dx = this.x - mouseX;
+                    const dy = this.y - mouseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        this.x += dx * 0.02;
+                        this.y += dy * 0.02;
+                    }
+                }
+
+                // Random character changes
+                if (Math.random() < config.randomness / 100) {
+                    const idx = Math.floor(Math.random() * this.chars.length);
+                    this.chars[idx] = this.getRandomChar();
+                }
+
+                // Flicker effect
+                if (config.flicker && Math.random() < 0.1) {
+                    this.chars[Math.floor(Math.random() * this.chars.length)] = '';
+                }
+
+                // Random stream behavior
+                if (config.randomStreams && Math.random() < 0.002) {
+                    this.active = false;
+                }
+
+                // Reset if off screen
+                if (config.direction === 'down' && this.y > height + this.length * this.size) {
+                    this.reset();
+                } else if (config.direction === 'up' && this.y < -this.length * this.size) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+
+                const brightnessMult = config.brightness / 100;
+                const trailOpacityMult = config.trailOpacity / 100;
+
+                for (let i = 0; i < this.chars.length; i++) {
+                    const charY = this.y - i * this.size * (config.direction === 'down' ? 1 : -1);
+                    
+                    if (charY < -this.size || charY > height + this.size) continue;
+
+                    const charX = this.x;
+                    const isHead = i === 0;
+                    const progress = i / this.length;
+                    const alpha = (1 - progress) * trailOpacityMult * this.depth;
+                    
+                    let color;
+                    if (config.colorPreset === 'rainbow') {
+                        const hue = (Date.now() / 50 + this.x / 10 + i * 10) % 360;
+                        color = `hsla(${hue}, 100%, ${isHead ? 70 : 50}%, ${alpha})`;
+                    } else {
+                        const baseColor = isHead && config.brightHeads ? config.headColor : config.primaryColor;
+                        color = hexToRgba(baseColor, alpha * brightnessMult);
+                    }
+
+                    ctx.font = `${this.size}px monospace`;
+                    ctx.fillStyle = color;
+
+                    if (config.glow) {
+                        const glowIntensity = config.glowIntensity / 100;
+                        ctx.shadowColor = config.primaryColor;
+                        ctx.shadowBlur = isHead ? 10 * glowIntensity : 5 * glowIntensity;
+                    } else {
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.fillText(this.chars[i], charX, charY);
+                }
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.life = 1;
+                this.char = getRandomChar();
+                this.size = config.charSize * (0.5 + Math.random() * 0.5);
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.02;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+            }
+
+            draw() {
+                if (this.life <= 0) return;
+                
+                ctx.font = `${this.size}px monospace`;
+                ctx.fillStyle = hexToRgba(config.primaryColor, this.life);
+                ctx.fillText(this.char, this.x, this.y);
+            }
+        }
+
+        function getRandomChar() {
+            let charset;
+            if (config.charPreset === 'custom' && config.customChars) {
+                charset = config.customChars;
+            } else {
+                charset = charPresets[config.charPreset] || charPresets.matrix;
+            }
+            return charset[Math.floor(Math.random() * charset.length)];
+        }
+
+        function initStreams() {
+            streams = [];
+            const columnWidth = config.charSize;
+            const numColumns = Math.ceil(width / columnWidth);
+            
+            for (let i = 0; i < numColumns; i++) {
+                const stream = new Stream(i * columnWidth);
+                streams.push(stream);
+            }
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // ==================== ANIMATION LOOP ====================
+        let lastTime = 0;
+        let frameCount = 0;
+        let fps = 60;
+        let fpsUpdateTime = 0;
+
+        function animate(currentTime) {
+            if (!config.paused) {
+                // FPS calculation
+                frameCount++;
+                if (currentTime - fpsUpdateTime >= 1000) {
+                    fps = frameCount;
+                    frameCount = 0;
+                    fpsUpdateTime = currentTime;
+                    if (config.showFps) {
+                        document.getElementById('fpsCounter').textContent = `FPS: ${fps}`;
+                    }
+                }
+
+                // Clear with fade effect
+                ctx.fillStyle = hexToRgba(config.bgColor, 0.1);
+                ctx.fillRect(0, 0, width, height);
+
+                // Update and draw streams
+                for (const stream of streams) {
+                    stream.update();
+                    stream.draw();
+                }
+
+                // Update and draw particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw();
+                    if (particles[i].life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // ==================== INTERACTION ====================
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = -1000;
+            mouseY = -1000;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (config.clickEffects) {
+                for (let i = 0; i < 20; i++) {
+                    particles.push(new Particle(e.clientX, e.clientY));
+                }
+            }
+        });
+
+        // ==================== UI CONTROLS ====================
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeBtn = document.getElementById('closeBtn');
+        const fpsCounter = document.getElementById('fpsCounter');
+        const pausedIndicator = document.getElementById('pausedIndicator');
+
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('open');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            settingsPanel.classList.remove('open');
+        });
+
+        // Animation controls
+        document.getElementById('speed').addEventListener('input', (e) => {
+            config.speed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = config.speed;
+            updateStreamSpeeds();
+        });
+
+        document.getElementById('density').addEventListener('input', (e) => {
+            config.density = parseInt(e.target.value);
+            document.getElementById('densityValue').textContent = config.density;
+            initStreams();
+        });
+
+        document.getElementById('size').addEventListener('input', (e) => {
+            config.charSize = parseInt(e.target.value);
+            document.getElementById('sizeValue').textContent = config.charSize;
+            initStreams();
+        });
+
+        document.getElementById('trail').addEventListener('input', (e) => {
+            config.trailLength = parseInt(e.target.value);
+            document.getElementById('trailValue').textContent = config.trailLength;
+            updateStreamLengths();
+        });
+
+        document.getElementById('direction').addEventListener('change', (e) => {
+            config.direction = e.target.value;
+        });
+
+        // Character controls
+        document.getElementById('charPreset').addEventListener('change', (e) => {
+            config.charPreset = e.target.value;
+            if (config.charPreset !== 'custom') {
+                document.getElementById('customChars').value = '';
+            }
+        });
+
+        document.getElementById('customChars').addEventListener('input', (e) => {
+            config.customChars = e.target.value;
+            if (config.customChars) {
+                config.charPreset = 'custom';
+                document.getElementById('charPreset').value = 'custom';
+            }
+        });
+
+        document.getElementById('randomness').addEventListener('input', (e) => {
+            config.randomness = parseInt(e.target.value);
+            document.getElementById('randomnessValue').textContent = config.randomness;
+        });
+
+        // Color controls
+        document.getElementById('colorPreset').addEventListener('change', (e) => {
+            config.colorPreset = e.target.value;
+            if (config.colorPreset !== 'custom' && colorPresets[config.colorPreset]) {
+                const preset = colorPresets[config.colorPreset];
+                config.primaryColor = preset.primary;
+                config.headColor = preset.head;
+                config.bgColor = preset.bg;
+                document.getElementById('primaryColor').value = preset.primary;
+                document.getElementById('headColor').value = preset.head;
+                document.getElementById('bgColor').value = preset.bg;
+            }
+        });
+
+        document.getElementById('primaryColor').addEventListener('input', (e) => {
+            config.primaryColor = e.target.value;
+            config.colorPreset = 'custom';
+            document.getElementById('colorPreset').value = 'custom';
+        });
+
+        document.getElementById('headColor').addEventListener('input', (e) => {
+            config.headColor = e.target.value;
+            config.colorPreset = 'custom';
+            document.getElementById('colorPreset').value = 'custom';
+        });
+
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            config.bgColor = e.target.value;
+            config.colorPreset = 'custom';
+            document.getElementById('colorPreset').value = 'custom';
+        });
+
+        document.getElementById('brightness').addEventListener('input', (e) => {
+            config.brightness = parseInt(e.target.value);
+            document.getElementById('brightnessValue').textContent = config.brightness;
+        });
+
+        document.getElementById('trailOpacity').addEventListener('input', (e) => {
+            config.trailOpacity = parseInt(e.target.value);
+            document.getElementById('trailOpacityValue').textContent = config.trailOpacity;
+        });
+
+        // Effect controls
+        document.getElementById('glow').addEventListener('change', (e) => {
+            config.glow = e.target.checked;
+        });
+
+        document.getElementById('glowIntensity').addEventListener('input', (e) => {
+            config.glowIntensity = parseInt(e.target.value);
+            document.getElementById('glowIntensityValue').textContent = config.glowIntensity;
+        });
+
+        document.getElementById('brightHeads').addEventListener('change', (e) => {
+            config.brightHeads = e.target.checked;
+        });
+
+        document.getElementById('flicker').addEventListener('change', (e) => {
+            config.flicker = e.target.checked;
+        });
+
+        document.getElementById('depth').addEventListener('change', (e) => {
+            config.depth = e.target.checked;
+            initStreams();
+        });
+
+        document.getElementById('randomStreams').addEventListener('change', (e) => {
+            config.randomStreams = e.target.checked;
+        });
+
+        document.getElementById('mouseInteraction').addEventListener('change', (e) => {
+            config.mouseInteraction = e.target.checked;
+        });
+
+        document.getElementById('clickEffects').addEventListener('change', (e) => {
+            config.clickEffects = e.target.checked;
+        });
+
+        // Preset controls
+        document.getElementById('presetSelect').addEventListener('change', (e) => {
+            if (e.target.value && fullPresets[e.target.value]) {
+                applyPreset(fullPresets[e.target.value]);
+            }
+        });
+
+        document.getElementById('randomizeBtn').addEventListener('click', randomize);
+
+        // Performance controls
+        document.getElementById('quality').addEventListener('change', (e) => {
+            config.quality = e.target.value;
+            applyQuality();
+        });
+
+        document.getElementById('showFps').addEventListener('change', (e) => {
+            config.showFps = e.target.checked;
+            fpsCounter.classList.toggle('visible', config.showFps);
+        });
+
+        // View controls
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+        document.getElementById('cleanModeBtn').addEventListener('click', toggleCleanMode);
+
+        // Action controls
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+        document.getElementById('resetBtn').addEventListener('click', resetSettings);
+
+        // Helper functions
+        function updateStreamSpeeds() {
+            for (const stream of streams) {
+                stream.speed = (config.speed / 50) * (2 + Math.random() * 3);
+            }
+        }
+
+        function updateStreamLengths() {
+            for (const stream of streams) {
+                stream.length = Math.floor((config.trailLength / 50) * (10 + Math.random() * 20));
+            }
+        }
+
+        function applyPreset(preset) {
+            Object.assign(config, preset);
+            
+            // Update UI
+            document.getElementById('speed').value = preset.speed;
+            document.getElementById('speedValue').textContent = preset.speed;
+            document.getElementById('density').value = preset.density;
+            document.getElementById('densityValue').textContent = preset.density;
+            document.getElementById('size').value = preset.charSize;
+            document.getElementById('sizeValue').textContent = preset.charSize;
+            document.getElementById('trail').value = preset.trailLength;
+            document.getElementById('trailValue').textContent = preset.trailLength;
+            document.getElementById('charPreset').value = preset.charPreset;
+            document.getElementById('colorPreset').value = preset.colorPreset;
+            document.getElementById('glow').checked = preset.glow;
+            document.getElementById('glowIntensity').value = preset.glowIntensity;
+            document.getElementById('glowIntensityValue').textContent = preset.glowIntensity;
+            document.getElementById('brightHeads').checked = preset.brightHeads;
+            document.getElementById('flicker').checked = preset.flicker;
+            document.getElementById('depth').checked = preset.depth;
+            document.getElementById('randomStreams').checked = preset.randomStreams;
+
+            // Apply color preset
+            if (colorPresets[preset.colorPreset]) {
+                const colorPreset = colorPresets[preset.colorPreset];
+                config.primaryColor = colorPreset.primary;
+                config.headColor = colorPreset.head;
+                config.bgColor = colorPreset.bg;
+                document.getElementById('primaryColor').value = colorPreset.primary;
+                document.getElementById('headColor').value = colorPreset.head;
+                document.getElementById('bgColor').value = colorPreset.bg;
+            }
+
+            initStreams();
+            saveSettings();
+        }
+
+        function randomize() {
+            const presets = Object.keys(fullPresets);
+            const randomPreset = fullPresets[presets[Math.floor(Math.random() * presets.length)]];
+            
+            // Randomize some values
+            randomPreset.speed = 20 + Math.floor(Math.random() * 80);
+            randomPreset.density = 30 + Math.floor(Math.random() * 50);
+            randomPreset.trailLength = 30 + Math.floor(Math.random() * 60);
+            randomPreset.glowIntensity = 20 + Math.floor(Math.random() * 60);
+            
+            applyPreset(randomPreset);
+        }
+
+        function applyQuality() {
+            const qualitySettings = {
+                low: { charSize: 12, density: 30 },
+                medium: { charSize: 14, density: 40 },
+                high: { charSize: 16, density: 50 },
+                ultra: { charSize: 18, density: 70 }
+            };
+            
+            const settings = qualitySettings[config.quality];
+            config.charSize = settings.charSize;
+            config.density = settings.density;
+            
+            document.getElementById('size').value = settings.charSize;
+            document.getElementById('sizeValue').textContent = settings.charSize;
+            document.getElementById('density').value = settings.density;
+            document.getElementById('densityValue').textContent = settings.density;
+            
+            initStreams();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function toggleCleanMode() {
+            config.cleanMode = !config.cleanMode;
+            document.body.classList.toggle('clean-mode', config.cleanMode);
+            settingsPanel.classList.remove('open');
+        }
+
+        function togglePause() {
+            config.paused = !config.paused;
+            pausedIndicator.classList.toggle('visible', config.paused);
+            document.getElementById('pauseBtn').textContent = config.paused ? 'Resume' : 'Pause';
+        }
+
+        function resetSettings() {
+            localStorage.removeItem('matrixRainSettings');
+            location.reload();
+        }
+
+        // ==================== KEYBOARD SHORTCUTS ====================
+        document.addEventListener('keydown', (e) => {
+            switch (e.key.toLowerCase()) {
+                case ' ':
+                    e.preventDefault();
+                    togglePause();
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'h':
+                    settingsPanel.classList.toggle('open');
+                    break;
+                case 'r':
+                    randomize();
+                    break;
+                case 's':
+                    settingsPanel.classList.toggle('open');
+                    break;
+                case 'c':
+                    toggleCleanMode();
+                    break;
+                case '1':
+                    applyPreset(fullPresets.classic);
+                    break;
+                case '2':
+                    applyPreset(fullPresets.binary);
+                    break;
+                case '3':
+                    applyPreset(fullPresets.cyberpunk);
+                    break;
+                case '4':
+                    applyPreset(fullPresets.terminal);
+                    break;
+                case 'escape':
+                    if (config.cleanMode) {
+                        toggleCleanMode();
+                    }
+                    break;
+            }
+        });
+
+        // ==================== LOCAL STORAGE ====================
+        function saveSettings() {
+            localStorage.setItem('matrixRainSettings', JSON.stringify(config));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('matrixRainSettings');
+            if (saved) {
+                try {
+                    const loaded = JSON.parse(saved);
+                    Object.assign(config, loaded);
+                    
+                    // Update UI
+                    document.getElementById('speed').value = config.speed;
+                    document.getElementById('speedValue').textContent = config.speed;
+                    document.getElementById('density').value = config.density;
+                    document.getElementById('densityValue').textContent = config.density;
+                    document.getElementById('size').value = config.charSize;
+                    document.getElementById('sizeValue').textContent = config.charSize;
+                    document.getElementById('trail').value = config.trailLength;
+                    document.getElementById('trailValue').textContent = config.trailLength;
+                    document.getElementById('direction').value = config.direction;
+                    document.getElementById('charPreset').value = config.charPreset;
+                    document.getElementById('customChars').value = config.customChars;
+                    document.getElementById('randomness').value = config.randomness;
+                    document.getElementById('randomnessValue').textContent = config.randomness;
+                    document.getElementById('colorPreset').value = config.colorPreset;
+                    document.getElementById('primaryColor').value = config.primaryColor;
+                    document.getElementById('headColor').value = config.headColor;
+                    document.getElementById('bgColor').value = config.bgColor;
+                    document.getElementById('brightness').value = config.brightness;
+                    document.getElementById('brightnessValue').textContent = config.brightness;
+                    document.getElementById('trailOpacity').value = config.trailOpacity;
+                    document.getElementById('trailOpacityValue').textContent = config.trailOpacity;
+                    document.getElementById('glow').checked = config.glow;
+                    document.getElementById('glowIntensity').value = config.glowIntensity;
+                    document.getElementById('glowIntensityValue').textContent = config.glowIntensity;
+                    document.getElementById('brightHeads').checked = config.brightHeads;
+                    document.getElementById('flicker').checked = config.flicker;
+                    document.getElementById('depth').checked = config.depth;
+                    document.getElementById('randomStreams').checked = config.randomStreams;
+                    document.getElementById('mouseInteraction').checked = config.mouseInteraction;
+                    document.getElementById('clickEffects').checked = config.clickEffects;
+                    document.getElementById('quality').value = config.quality;
+                    document.getElementById('showFps').checked = config.showFps;
+                    fpsCounter.classList.toggle('visible', config.showFps);
+                    
+                    if (config.cleanMode) {
+                        document.body.classList.add('clean-mode');
+                    }
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+            }
+        }
+
+        // Auto-save on setting changes
+        const allInputs = document.querySelectorAll('input, select');
+        allInputs.forEach(input => {
+            input.addEventListener('change', saveSettings);
+        });
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('resize', resizeCanvas);
+
+        function init() {
+            loadSettings();
+            resizeCanvas();
+            applyQuality();
+            requestAnimationFrame(animate);
+        }
+
+        init();
+    </script>
+</body>
+</html>
